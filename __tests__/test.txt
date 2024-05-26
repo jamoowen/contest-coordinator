@@ -1,0 +1,57 @@
+import fs from 'fs'
+
+console.log('testing')
+
+
+
+
+// POST tournament creation
+curl --header "Content-Type: application/json" \
+  --request POST \
+  --data '{"tournamentName":"Mw champs","tournamentDescription":"a mw tournament", "tournamentFormat":"other", "gameName":"mw3", "platform":"PS", "prize": "$1000"}' \
+  http://localhost:8000/api/tournaments
+
+665350e27092d3c62176b180 = tournamentId for the above tournament
+
+
+// GET tournament with id
+curl "http://localhost:8000/api/tournaments?id=665350e27092d3c62176b180"
+6651c80055f517ad10cb6f3a
+
+//GET tournaments 
+curl "http://localhost:8000/api/tournaments"
+
+// POST a new user to a tournament
+curl --header "Content-Type: application/json" \
+  --request POST \
+  --data '{"name":"james","username":"jamoowen", "email":"test@gmail.com", "tournamentId":"665350e27092d3c62176b180"}' \
+  http://localhost:8000/api/player/new
+
+id: 66531adf0f3fa5be4e9e2b2d 
+
+
+// POST another new user to tournament
+curl --header "Content-Type: application/json" \
+  --request POST \
+  --data '{"name":"Elon","username":"xAe12", "email":"emusk@gmail.com", "tournamentId":"665350e27092d3c62176b180"}' \
+  http://localhost:8000/api/player/new
+
+id: 66531b5aa2f2925ea65661f8
+
+// GET player from username + email 
+curl "http://localhost:8000/api/player?username=jamoowen&email=test@gmail.com"
+
+// POST match
+// TEST tournament creation
+curl --header "Content-Type: application/json" \
+  --request POST \
+  --data '{"match": {"tournamentId": "665350e27092d3c62176b180","playerA":"66531adf0f3fa5be4e9e2b2d","playerB":"66531b5aa2f2925ea65661f8", "playerAScore":"21", "playerBScore":"10", "outcome":"win", "winner": "playerA"}}' \
+  http://localhost:8000/api/match
+
+
+
+//GET matches 
+curl "http://localhost:8000/api/match?tournamentId=665350e27092d3c62176b180"
+
+//GET particular match
+curl "http://localhost:8000/api/match?id=1"

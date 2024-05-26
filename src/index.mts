@@ -10,7 +10,11 @@ import { router as matchRouter } from "./routes/match-router.mjs";
 dotenv.config();
 
 const MONGO_CONNECTION_STRING = process.env.CONNECTION_STRING!;
-const port = process.env.PORT || 3000;
+let port = process.env.PORT || 0;
+
+if (process.env.NODE_ENV == 'test') {
+  port = 0
+}
 
 async function connectToMongo(connectionString: string) {
   await mongoose.connect(connectionString);
@@ -42,3 +46,5 @@ app.get("/", (req: Request, res: Response) => {
 app.listen(port, () => {
   console.log(`[server]: Server is running at http://localhost:${port}`);
 });
+
+export default app; 

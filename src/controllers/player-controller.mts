@@ -2,6 +2,8 @@ import express, { Request, Response } from 'express';
 import { Player } from '../models/player.mjs';
 import mongoose from "mongoose";
 import { Tournament } from '../models/tournament.mjs'
+import { registerPlayerWithTournament } from '../services/register-player-with-tournament.mjs';
+import { validateInput } from '../services/validate-input.mjs';
 
 // when registering a player:
 // 1. if doesnt exist -> insert into players collection
@@ -38,49 +40,7 @@ export async function getPlayer(req: Request, res: Response) {
     }
 }
 
-// REGISTERS PLAYER FOR A SPECIFIC TOURNAMENT (internal function)
-// this function will register a playerId with a given tournament 
-async function registerPlayerWithTournament(playerId: string, tournamentId: string) {
-    console.log(`registering: ${playerId}, tournament: ${tournamentId}`)
-    try {
-        const player = await Player.findById({ _id: playerId });
-        const tournament = await Tournament.findById({ _id: tournamentId });
-        const date = new Date()
 
-        if (!player) {
-            return { http: 400, message: "Can't find player in database" }
-        }
-        if (!tournament) {
-            return { http: 400, message: "Can't find tournament in database" }
-        }
-
-        // this checks if the given playerId exists
-        // firstly, if there is no length to the leaderboard, we return false. else, we return the result of the .some search
-        // .some returns true if the given callback returns true for the array its enacted on
-        const playerExists = tournament.leaderBoard.length ? tournament.leaderBoard.some(entry => entry.playerId.equals(playerId)) : false;
-
-        // if the player is already in the leaderboard, we dont need to do anything
-        if (playerExists) {
-            return { http: 400, message: "Player already registered" }
-        }
-
-        // append player to leaderboard and update the dateModified (Should probably switch the dateModified to be handled by middleware)
-        tournament.leaderBoard.push({ playerId: player._id, playerUsername: player.username });
-        tournament.dateModified = date;
-        player.tournamentsEntered.push(tournament._id);
-        player.dateModified = date
-        tournament.dateModified = new Date();
-
-
-        await player.save()
-        await tournament.save()
-        return { http: 200, message: "Player successfully registered" }
-
-    } catch (error: any) {
-        console.log("Error registering player")
-        return { http: 500, message: `Unable to register player for a given tournament: ${error.toString()}` }
-    }
-}
 
 // EXISTING PLAYER
 // this should update the characters document with the new tournament id && add the players id to tournament leaderboard
@@ -90,10 +50,9 @@ export async function registerExistingPlayer(req: Request, res: Response) {
 
 
     try {
-        if (!data.name || !data.username || !data.email || !data.tournamentId) {
-            return res.status(400).json({ message: 'name, username, email, and tournament id must be supplied' });
-        }
-
+        const requiredInput = ["name", "username", "email", "tournamentId"]
+        const validInput = await validateInput(data, requiredInput)
+        if (!validInput) {return res.status(400).json({ message: `Ensure all input fields are populated: ${requiredInput}` });}
         // here, I'm checking if the player exists with a given username email combo
         // we would need extra checks like this to ensure the player registering is indeed the player in out db
         const userId = await Player.exists({ username: data.username, email: data.email })
@@ -109,11 +68,11 @@ export async function registerExistingPlayer(req: Request, res: Response) {
         // annoyingly typescript was complaining about the objectId type so i cast to string. might be better to fix later
         const registerResponse = await registerPlayerWithTournament(userId._id.toString(), tournamentId._id.toString())
 
-        return res.status(registerResponse.http).json({ message: registerResponse.message })
+        return res.status(registerResponse.http).json({ message: registerResponse.message, playerId: registerResponse.playerId })
 
     } catch (error: any) {
         console.log(`Unable to register existing player: ${error.toString()}`)
-        return { http: 500, message: `Unable to register existing player: ${error.toString()}` }
+        return res.status(500).json({ error: `Unable to register existing player: ${error.toString()}` })
     }
 
 }
@@ -125,10 +84,10 @@ export async function registerNewPlayer(req: Request, res: Response) {
     try {
         const data = req.body
         const date = new Date()
-
-        if (!data.name || !data.username || !data.email || !data.tournamentId) {
-            return res.status(400).json({ message: 'name, username, email, and tournament id must be supplied' });
-        }
+        const requiredInput = ["name", "username", "email", "tournamentId"]
+        const validInput = await validateInput(data, requiredInput)
+        
+        if (!validInput) {return res.status(400).json({ message: `Ensure all input fields are populated: ${requiredInput}` });}
 
         const tournamentId = await Tournament.exists({ _id: data.tournamentId })
         const playerAlreadyExists = await Player.exists({ username: data.username })
@@ -159,12 +118,12 @@ export async function registerNewPlayer(req: Request, res: Response) {
 
         })
 
-        const registerResponse = await registerPlayerWithTournament(player._id.toString(), tournamentId.toString())
+        const registerResponse = await registerPlayerWithTournament(player._id.toString(), tournamentId._id.toString())
 
-        return res.status(registerResponse.http).json({ message: registerResponse.message })
+        return res.status(registerResponse.http).json({ message: registerResponse.message, playerId: registerResponse.playerId })
     } catch (error: any) {
         console.log(`Unable to register new player: ${error.toString()}`)
-        return { http: 500, message: `Unable to register new player: ${error.toString()}` }
+        return res.status(500).json({ error: `Unable to register new player: ${error.toString()}` })
     }
 
 

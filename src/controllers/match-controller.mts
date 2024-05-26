@@ -2,6 +2,7 @@ import express, { Request, Response } from 'express';
 import { Player } from '../models/player.mjs';
 import mongoose from "mongoose";
 import { Tournament } from '../models/tournament.mjs';
+import { validateInput } from '../services/validate-input.mjs';
 
 
 // Here we need to fetch the matchups for a given tournament + insert new matchup
@@ -13,13 +14,15 @@ export async function getMatch(req: Request, res: Response) {
     const matchId = Number(req.query.matchId);
     const tournamentId = req.query.tournamentId;
 
+    console.log(`fetching match: ${matchId} for tournament: ${tournamentId}`)
+
     try {
 
         if (!tournamentId) {
             return res.status(400).json({ message: 'tournamentId must be supplied!' });
         }
 
-        const tournament = await Tournament.findById({ tournamentId });
+        const tournament = await Tournament.findById({ _id: tournamentId });
 
         if (!tournament) {
             return res.status(400).json({ message: `Tournament (${tournamentId}) not found in database` });
@@ -42,7 +45,7 @@ export async function getMatch(req: Request, res: Response) {
 
     } catch (error: any) {
         console.log(`Unable to get games with query params: ${JSON.stringify(req.query)}: ${error.toString()}`)
-        return { http: 500, message: `Unable to register new player: ${error.toString()}` }
+        return res.status(500).json({ message: `Unable to register new player: ${error.toString()}` })
     }
 
 }
@@ -74,10 +77,15 @@ export async function recordMatch(req: Request, res: Response) {
         const match = req.body.match
         const date = new Date()
 
+
+        console.log(`a from query: ${JSON.stringify(match)}, playerB: ${match.playerA}`)
+
         // all fields must be populated to correctly record a match
-        if (!match.playerA || !match.playerB || !match.playerAScore || !match.playerBScore || !match.outcome || !match.winner) {
-            return res.status(400).json({ message: 'match object must be fully populated: match: {tournamentId: , playerA: , playerB: , playerAScore: , playerBScore, outcome, winner }' });
-        }
+        const requiredInput = ["tournamentId", "playerA", "playerB", "playerAScore", "playerBScore", "outcome", "winner"]
+
+        const validInput = await validateInput(match, requiredInput)
+
+        if (!validInput) { return res.status(400).json({ message: `Ensure all input fields are populated: ${requiredInput}` }); }
 
         if (!['win', 'draw', 'void', 'in progress'].includes(match.outcome)) {
             return res.status(400).json({ message: "outcome must be either: ['win', 'draw', 'void', 'in progress'] " });
@@ -92,6 +100,7 @@ export async function recordMatch(req: Request, res: Response) {
         const playerA = await Player.findById({ _id: match.playerA });
         const playerB = await Player.findById({ _id: match.playerB });
 
+
         if (!tournament) {
             return res.status(400).json({ message: `Unable to find a tournament matching the id (${match.tournamentId})` });
         }
@@ -101,6 +110,7 @@ export async function recordMatch(req: Request, res: Response) {
         if (!playerB) {
             return res.status(400).json({ message: `Unable to find playerB in database (${match.playerB})` });
         }
+        console.log(`PlayerA: ${playerA?._id}, playerB: ${playerB._id}`)
 
 
         let gameWinner = null;
@@ -113,6 +123,7 @@ export async function recordMatch(req: Request, res: Response) {
         let playerAFieldToIncrement = 'void';
         let playerBFieldToIncrement = 'void';
 
+        // handle the 4 different game outcomes
         if (match.outcome === 'win' && match.winner === 'playerA') {
             playerA.games.won = playerA.games.won + 1;
             playerAFieldToIncrement = 'won';
@@ -138,8 +149,8 @@ export async function recordMatch(req: Request, res: Response) {
         }
 
         // we need to find the max gameId -> when adding a new game, we will increment this
-        const gameIdList = tournament.games.map((game) => game.gameId)
-        const maxGameId = Math.max(...gameIdList)
+        const maxGameId = tournament.games.length ? tournament.games.length : 0
+        console.log(`maxid: ${maxGameId}`)
         // we will insert this into tournaments.games
         const newGameObj = {
             gameId: maxGameId + 1,
@@ -188,22 +199,11 @@ export async function recordMatch(req: Request, res: Response) {
             }
         );
 
-        return res.status(200).json({message: "successfully recorded match"})
+        return res.status(200).json({ message: "successfully recorded match", matchId: maxGameId + 1 })
     } catch (error: any) {
         console.log(`Unable to record match: ${error.toString()}`)
-        return { http: 500, message: `Unable to record match: ${error.toString()}` }
+        return res.status(500).json({ message: `Unable to record match: ${error.toString()}` })
     }
 
 
 }
-
-// tournament 6651c799abaa52775cef792f
-
-// curl --header "Content-Type: application/json" \
-//   --request POST \
-//   --data '{"name":"james","username":"jamoowen", "email":"test@gmail.com", "tournamentId":"6651c80055f517ad10cb6f3a"}' \
-//   http://localhost:8000/api/player/new
-
-
-// curl "http://localhost:8000/api/players?id=6651c80055f517ad10cb6f3a"
-// 6651c80055f517ad10cb6f3a

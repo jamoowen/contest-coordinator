@@ -1,5 +1,6 @@
 import express, { Request, Response } from 'express';
 import { Tournament, platformEnum } from '../models/tournament.mjs';
+import { validateInput } from '../services/validate-input.mjs';
 // we need to handle a few different calls to /tournaments
 // 1. GET list of all tournaments
 // 2. GET details of a specific tournament, including leaderboard (if there is a param)
@@ -14,7 +15,7 @@ export async function getTournaments(req: Request, res: Response) {
             console.log(`fetching tournament: ${tournamentId}`)
             const data = await Tournament.findById({ _id: tournamentId })
             // if we find the tournament via the given id return it, else return 400 and the err message
-            return data ? res.status(200).json(data) : res.status(400).json({message: `Cannot find tournament (${tournamentId}) in database`})
+            return data ? res.status(200).json(data) : res.status(400).json({ message: `Cannot find tournament (${tournamentId}) in database` })
 
         } else {
             // return all tournaments
@@ -38,26 +39,15 @@ export async function getTournaments(req: Request, res: Response) {
 export async function initializeTournament(req: Request, res: Response) {
     const data = req.body
     // validate all required data is supplied
+    const requiredInput = ["tournamentName", "tournamentDescription", "tournamentFormat", "gameName", "platform", "prize"]
+    const validInput = await validateInput(data, requiredInput)
 
-    if (!data.tournamentName) {
-        return res.status(400).json({ message: 'tournamentName is required' });
-    }
-    if (!data.tournamentDescription) {
-        return res.status(400).json({ message: 'tournamentDescription is required' });
-    }
-    if (!data.tournamentFormat) {
-        return res.status(400).json({ message: 'tournamentFormat is required' });
-    }
-    if (!data.gameName) {
-        return res.status(400).json({ message: 'gameName is required' });
-    }
+    if (!validInput) { return res.status(400).json({ message: `Ensure all input fields are populated: ${requiredInput}` }); }
     // platform supplied must be one of supplied list
     if (!data.platform || !platformEnum.includes(data.platform)) {
         return res.status(400).json({ message: "platform must be one of the following: ['PC', 'PS', 'Xbox', 'Console', 'Crossplay', 'Mobile', 'Nintendo', 'Other']" });
     }
-    if (!data.prize) {
-        return res.status(400).json({ message: 'prize is required' });
-    }
+
 
     console.log(`Post body: ${JSON.stringify(req.body)}`)
 
@@ -76,7 +66,7 @@ export async function initializeTournament(req: Request, res: Response) {
         games: []
     })
     console.log(`Initialized new tournament: ${tournament._id}`)
-    return res.status(200).json(tournament._id)
+    return res.status(200).json({ message: `Succesffully initialized tournament '${tournament.tournamentName}' `, tournamentId: tournament._id })
 
 }
 
