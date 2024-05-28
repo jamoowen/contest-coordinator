@@ -94,6 +94,8 @@ curl "http://localhost:8000/api/tournaments/leaderboard?id="
 
 to record a match (enter a tournamentId, playerA, playerB) :  
 playerA & playerB must be their ID's  
+outcome must be either: 'win', 'draw', 'void', 'in progress'  
+winner must be either: 'playerA', 'playerB', 'none' or null  
 curl --header "Content-Type: application/json" \
   --request POST \
   --data '{"match": {"tournamentId": "","playerA":"","playerB":"", "playerAScore":"21", "playerBScore":"10", "outcome":"win", "winner": "playerA"}}' \
