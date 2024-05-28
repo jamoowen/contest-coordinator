@@ -12,7 +12,6 @@ export async function getTournaments(req: Request, res: Response) {
     // if we are provided a tournament query param, then provide data just relating to that tournament
     try {
         if (tournamentId) {
-            console.log(`fetching tournament: ${tournamentId}`)
             const data = await Tournament.findById({ _id: tournamentId })
             // if we find the tournament via the given id return it, else return 400 and the err message
             return data ? res.status(200).json(data) : res.status(400).json({ message: `Cannot find tournament (${tournamentId}) in database` })
@@ -22,6 +21,34 @@ export async function getTournaments(req: Request, res: Response) {
             const data = await Tournament.find({})
             return res.status(200).json(data)
         }
+    } catch (error: any) {
+        console.log("Error handling /tournaments get request")
+        return res.status(500).json({ error: error.toString() });
+
+    }
+}
+
+export async function getLeaderboard(req: Request, res: Response) {
+    const tournamentId = req.query.id
+    // return res.status(200).json({"tournaments": [{"tournament1": "boohoo"}]}) 
+    // if we are provided a tournament query param, then provide data just relating to that tournament
+    try {
+        if (!tournamentId) {
+            console.log(`You must provide a valid tournament id to view leaderboard`)
+            return res.status(400).json({ message: `You must provide a valid tournament id` })
+        }
+
+        const data = await Tournament.findById({ _id: tournamentId })
+
+        if (!data) {
+            console.log(`Unable to find the given tournament`)
+            return res.status(400).json({ message: `Unable to find the given tournament` })
+        }
+
+        const leaderboard = data.leaderBoard;
+        const sortedLeaderboard = leaderboard.sort((a: any, b: any) => b.won - a.won);
+        return res.status(200).json(sortedLeaderboard)
+
     } catch (error: any) {
         console.log("Error handling /tournaments get request")
         return res.status(500).json({ error: error.toString() });
@@ -48,9 +75,6 @@ export async function initializeTournament(req: Request, res: Response) {
         return res.status(400).json({ message: "platform must be one of the following: ['PC', 'PS', 'Xbox', 'Console', 'Crossplay', 'Mobile', 'Nintendo', 'Other']" });
     }
 
-
-    console.log(`Post body: ${JSON.stringify(req.body)}`)
-
     const date = new Date();
 
     const tournament = await Tournament.create({
@@ -65,7 +89,6 @@ export async function initializeTournament(req: Request, res: Response) {
         leaderBoard: [],
         games: []
     })
-    console.log(`Initialized new tournament: ${tournament._id}`)
     return res.status(200).json({ message: `Succesffully initialized tournament '${tournament.tournamentName}' `, tournamentId: tournament._id })
 
 }

@@ -12,7 +12,9 @@ beforeAll(async () => {
 
 /* Closing database connection after each test. */
 afterAll(async () => {
-
+    const tournament = await Tournament.findById({ _id: process.env.TEST_TOURNAMENT_ID })
+    tournament.leaderBoard = tournament.leaderBoard.filter(player => player.playerUsername !== 'test_user');
+    await tournament.save();
     await mongoose.connection.close();
 });
 
@@ -23,7 +25,7 @@ describe('POST /api/match', () => {
             match: {
                 tournamentId: process.env.TEST_TOURNAMENT_ID,
                 playerA: process.env.TEST_PLAYER_A_ID,
-                playerB: process.env.TEST_PLAYER_A_ID,
+                playerB: process.env.TEST_PLAYER_B_ID,
                 playerAScore: 21,
                 playerBScore: 10,
                 outcome: 'win',

@@ -14,8 +14,6 @@ export async function getMatch(req: Request, res: Response) {
     const matchId = Number(req.query.matchId);
     const tournamentId = req.query.tournamentId;
 
-    console.log(`fetching match: ${matchId} for tournament: ${tournamentId}`)
-
     try {
 
         if (!tournamentId) {
@@ -77,9 +75,6 @@ export async function recordMatch(req: Request, res: Response) {
         const match = req.body.match
         const date = new Date()
 
-
-        console.log(`a from query: ${JSON.stringify(match)}, playerB: ${match.playerA}`)
-
         // all fields must be populated to correctly record a match
         const requiredInput = ["tournamentId", "playerA", "playerB", "playerAScore", "playerBScore", "outcome", "winner"]
 
@@ -110,8 +105,6 @@ export async function recordMatch(req: Request, res: Response) {
         if (!playerB) {
             return res.status(400).json({ message: `Unable to find playerB in database (${match.playerB})` });
         }
-        console.log(`PlayerA: ${playerA?._id}, playerB: ${playerB._id}`)
-
 
         let gameWinner = null;
 
@@ -150,7 +143,6 @@ export async function recordMatch(req: Request, res: Response) {
 
         // we need to find the max gameId -> when adding a new game, we will increment this
         const maxGameId = tournament.games.length ? tournament.games.length : 0
-        console.log(`maxid: ${maxGameId}`)
         // we will insert this into tournaments.games
         const newGameObj = {
             gameId: maxGameId + 1,

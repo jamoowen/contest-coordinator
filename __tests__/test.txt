@@ -9,8 +9,8 @@ curl --header "Content-Type: application/json" \
 
 
 // GET tournament with id
-curl "http://localhost:8000/api/tournaments?id=665350e27092d3c62176b180"
-6651c80055f517ad10cb6f3a
+curl "http://localhost:8000/api/tournaments?id=665573c91104ddfb6fdcfc36"
+
 
 //GET tournaments 
 curl "http://localhost:8000/api/tournaments"

@@ -53,6 +53,24 @@ describe('GET /api/tournaments', () => {
 
 });
 
+describe('GET /api/tournaments/leaderboard', () => {
+    it('should return the sorted leaderboard', async () => {
+        const tournamentId = process.env.TEST_TOURNAMENT_ID; 
+        const response = await request(app).get(`/api/tournaments/leaderboard?id=${tournamentId}`);
+        
+        expect(response.status).toBe(200);
+        expect(response.body.length).toBeGreaterThan(0);
+    });
+
+    it('should return 400 if no tournamentid is provided', async () => {
+        
+        const response = await request(app).get(`/api/tournaments/leaderboard`);
+        expect(response.status).toBe(400);
+        
+    });
+
+});
+
 
 
 

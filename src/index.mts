@@ -10,11 +10,14 @@ import { router as matchRouter } from "./routes/match-router.mjs";
 dotenv.config();
 
 const MONGO_CONNECTION_STRING = process.env.CONNECTION_STRING!;
+
 let port = process.env.PORT || 0;
 
+// port 0 searches for new open ports (we need this when running our jest tests as jest tests in parallel)
 if (process.env.NODE_ENV == 'test') {
   port = 0
 }
+
 
 async function connectToMongo(connectionString: string) {
   await mongoose.connect(connectionString);
