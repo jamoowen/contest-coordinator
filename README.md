@@ -85,5 +85,16 @@ curl --header "Content-Type: application/json" \
   http://localhost:8000/api/player/new
 
 
-to check leaderboard:
+
+Additional manual tests:
+
+to check leaderboard (enter a tournament id):  
 curl "http://localhost:8000/api/tournaments/leaderboard?id="
+
+
+to record a match (enter a tournamentId, playerA, playerB) :  
+playerA & playerB must be their ID's  
+curl --header "Content-Type: application/json" \
+  --request POST \
+  --data '{"match": {"tournamentId": "","playerA":"","playerB":"", "playerAScore":"21", "playerBScore":"10", "outcome":"win", "winner": "playerA"}}' \
+  http://localhost:8000/api/match  
