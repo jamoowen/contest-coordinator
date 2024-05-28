@@ -5,8 +5,8 @@ export async function validateInput(inputObject:any, requiredFields: string[]) {
 
     try {
         for (let field of requiredFields) {
-            console.log(`field: ${field}, obj: ${inputObject[field]}`)
-            if (inputObject[field] === null || inputObject[field]=== undefined ) {
+            const inputField = inputObject[field]
+            if (!inputField) {
                 console.log("failed validate input")
                 return false
             }

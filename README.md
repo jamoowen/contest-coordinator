@@ -54,9 +54,46 @@ Endpoints:
     end tournament -> end the tournament at whatever stage it is at
 
 
-Questions: 
-    Im tempted to store foreign keys and references to other tables like you would do in a relational db?
-    eg: i wanted to store a reference to the Player within the Tournaments.leaderboard array. But this would just end up 
-    leading to an extra api call to the db? Tradeoff between size and query speed? also we would storing duplicate data if we store the username in both the Players document and within tournaments.leaderboards? what is best practice here? 
+Questions & improvements: 
+Im tempted to store foreign keys and references to other tables like you would do in a relational db?
+eg: i wanted to store a reference to the Player within the Tournaments.leaderboard array. But this would just end up 
+leading to an extra api call to the db? Tradeoff between size and query speed? also we would storing duplicate data if we store the username in both the Players document and within tournaments.leaderboards? what is best practice here? 
 
-    I think i have too much logic within the controllers. Perhaps I should slim these down? 
+I think i have too much logic within the controllers. Perhaps I should slim these down?
+
+I need to validate the objectId that is sent - if mongoose isnt able to cast the given input to objectId type it throws an error
+
+Testing:
+
+the integration tests run through all of the enpoints and test different scenarios.
+For the tests to work, we need to add a few environmental variables (to test getting an existing customer and registering existing customers for tournaments)
+To do this: 
+1. Start the server
+2. Run the first curl command and add the tournament id that is provided in the response to your .env 
+3. Add the tournamentID to the two player curl commands and run them, adding their username, email and id to the .env as well
+4. Run yarn test
+
+curl --header "Content-Type: application/json" \
+--request POST \
+--data '{"tournamentName":"Battle of the Deathstar","tournamentDescription":"A battlefront tournament", "tournamentFormat":"other", "gameName":"Battlefront 2", "platform":"PS", "prize": "$1000"}' \
+http://localhost:8000/api/tournaments
+
+curl --header "Content-Type: application/json" \
+  --request POST \
+  --data '{"name":"Luke Skywalker","username":"average_jedi", "email":"lukesky@gmail.com", "tournamentId":""}' \
+  http://localhost:8000/api/player/new
+
+curl --header "Content-Type: application/json" \
+  --request POST \
+  --data '{"name":"Anakin Skywalker","username":"Darth_Vader", "email":"vader@hotmail.com", "tournamentId":""}' \
+  http://localhost:8000/api/player/new
+
+
+
+TEST_TOURNAMENT_ID=
+TEST_PLAYER_A_ID=
+TEST_PLAYER_A_USERNAME=
+TEST_PLAYER_A_EMAIL=
+TEST_PLAYER_B_ID=
+TEST_PLAYER_B_USERNAME=
+TEST_PLAYER_B_EMAIL=
