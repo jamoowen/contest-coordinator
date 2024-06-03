@@ -1,0 +1,51 @@
+
+// POST tournament creation
+curl --header "Content-Type: application/json" \
+  --request POST \
+  --data '{"tournamentName":"Battle of the Deathstar","tournamentDescription":"A battlefront tournament", "tournamentFormat":"other", "gameName":"Battlefront 2", "platform":"PS", "prize": "$1000"}' \
+  http://localhost:8000/api/tournaments
+
+665350e27092d3c62176b180 = tournamentId for the above tournament
+
+
+// GET tournament with id
+curl "http://localhost:8000/api/tournaments?id=665573c91104ddfb6fdcfc36"
+
+
+//GET tournaments 
+curl "http://localhost:8000/api/tournaments"
+
+// POST a new user to a tournament
+curl --header "Content-Type: application/json" \
+  --request POST \
+  --data '{"name":"Luke Skywalker","username":"average_jedi", "email":"lukesky@gmail.com", "tournamentId":""}' \
+  http://localhost:8000/api/player/new
+
+id: 66531adf0f3fa5be4e9e2b2d 
+
+
+// POST another new user to tournament
+curl --header "Content-Type: application/json" \
+  --request POST \
+  --data '{"name":"Anakin Skywalker","username":"Darth_Vader", "email":"vader@hotmail.com", "tournamentId":""}' \
+  http://localhost:8000/api/player/new
+
+id: 66531b5aa2f2925ea65661f8
+
+// GET player from username + email 
+curl "http://localhost:8000/api/player?username=jamoowen&email=test@gmail.com"
+
+// POST match
+// TEST tournament creation
+curl --header "Content-Type: application/json" \
+  --request POST \
+  --data '{"match": {"tournamentId": "665350e27092d3c62176b180","playerA":"66531adf0f3fa5be4e9e2b2d","playerB":"66531b5aa2f2925ea65661f8", "playerAScore":"21", "playerBScore":"10", "outcome":"win", "winner": "playerA"}}' \
+  http://localhost:8000/api/match
+
+
+
+//GET matches 
+curl "http://localhost:8000/api/match?tournamentId=665350e27092d3c62176b180"
+
+//GET particular match
+curl "http://localhost:8000/api/match?id=1"
